@@ -9,6 +9,45 @@ receivers:
 
 processors:
   batch:
+  attributes:
+    actions:
+      - key: severity
+        action: insert
+        value: ""
+      - key: http.status_code
+        action: insert
+        value: http_status_code
+      - key: traceID
+        action: insert
+        value: traceid
+
+  resource:
+    attributes:
+      - key: service.name
+        value: "service_name"
+        action: insert
+      - key: host.name
+        value: "host_name"
+        action: insert
+
+# exporters:
+#   prometheus:
+#     endpoint: collector:8090
+#   otlphttp:
+#     endpoint: http://tempo:4318
+#   loki:
+#     endpoint: http://loki:3100/loki/api/v1/push
+#     labels:
+#       resource:
+#         service.name: "service_name"
+#         host.name: "host_name"
+#       attributes:
+#         # Allowing 'severity' attribute and not providing a mapping, since the attribute name is a valid Loki label name.
+#         severity: ""
+#         http.status_code: "http_status_code"
+#       record:
+#         # Adds 'traceID' as a log label, seen as 'traceid' in Loki.
+#         traceID: "traceid"
 
 exporters:
   prometheus:
@@ -17,17 +56,9 @@ exporters:
     endpoint: http://tempo:4318
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
-    labels:
-      resource:
-        service.name: "service_name"
-        host.name: "host_name"
-      attributes:
-        # Allowing 'severity' attribute and not providing a mapping, since the attribute name is a valid Loki label name.
-        severity: ""
-        http.status_code: "http_status_code"
-      record:
-        # Adds 'traceID' as a log label, seen as 'traceid' in Loki.
-        traceID: "traceid"
+    #labels:
+    #  serice: "service_name"
+    #  host: "host_name"
 
 service:
   pipelines:
