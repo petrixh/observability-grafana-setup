@@ -3,7 +3,7 @@
 services:
   tempo:
     #image: grafana/tempo:latest
-    image: grafana/tempo:main-de45a61-arm64
+    image: grafana/tempo:main-fd5743d
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - tempo_data:/tmp/tempo
@@ -46,6 +46,7 @@ services:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./grafana/vaadin-dashboard.json:/var/lib/grafana/dashboards/vaadin-dashboard.json
+      - ./grafana/vaadin-dashboard-3.1.0.json:/var/lib/grafana/dashboards/vaadin-dashboard-3.1.0.json
     environment:
       GF_FEATURE_TOGGLES_ENABLE: "tempoApmTable"
     ports:
