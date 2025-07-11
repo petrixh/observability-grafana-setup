@@ -14,7 +14,7 @@ services:
       - "4318"  # otlp http
   loki:
     #image: grafana/loki:latest
-    image: grafana/loki:main-170217f-arm64
+    image: grafana/loki:3.5.2
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
