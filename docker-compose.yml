@@ -3,10 +3,11 @@
 services:
   tempo:
     #image: grafana/tempo:latest
-    image: grafana/tempo:main-fd5743d
+    image: grafana/tempo:2.9.1
+    user: "10001"
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
-      - tempo_data:/tmp/tempo
+      - tempo_data:/var/tempo
       - ./tempo/tempo.yaml:/etc/tempo.yaml
     ports:
       - "3200"  # tempo
@@ -14,13 +15,13 @@ services:
       - "4318"  # otlp http
   loki:
     #image: grafana/loki:latest
-    image: grafana/loki:3.5.2
+    image: grafana/loki:3.7.1
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
   collector:
     #image: otel/opentelemetry-collector-contrib:latest
-    image: otel/opentelemetry-collector-contrib:0.74.0
+    image: otel/opentelemetry-collector-contrib:0.149.0
     ports:
       - "4317:4317"
       - "4318:4318"
@@ -29,9 +30,9 @@ services:
       - ./collector/collector.yaml:/etc/otelcol-contrib/config.yaml
   prometheus:
     #image: prom/prometheus:latest
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:v3.10.0
     command:
-      - "--enable-feature=remote-write-receiver"
+      - "--web.enable-remote-write-receiver"
       - "--config.file=/etc/prometheus/prometheus.yml"
     ports:
       - "9090:9090"
@@ -40,15 +41,17 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
     #image: grafana/grafana-enterprise
-    image: grafana/grafana-enterprise:9.5.21
+    image: grafana/grafana-enterprise:12.4.2
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./grafana/vaadin-dashboard.json:/var/lib/grafana/dashboards/vaadin-dashboard.json
       - ./grafana/vaadin-dashboard-3.1.0.json:/var/lib/grafana/dashboards/vaadin-dashboard-3.1.0.json
+      - ./grafana/vaadin-dashboard-4.0.0.json:/var/lib/grafana/dashboards/vaadin-dashboard-4.0.0.json
     environment:
-      GF_FEATURE_TOGGLES_ENABLE: "tempoApmTable"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
     ports:
       - "3000:3000"
 
