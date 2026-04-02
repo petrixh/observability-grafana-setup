@@ -113,7 +113,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "jvm_memory_used{exported_job=\"vaadin\"}",
+          "expr": "jvm_memory_used_bytes{exported_job=\"vaadin\"}",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": true,
@@ -213,7 +213,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "jvm_cpu_recent_utilization{exported_job=\"vaadin\"}",
+          "expr": "jvm_cpu_recent_utilization_ratio{exported_job=\"vaadin\"}",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": true,
@@ -424,8 +424,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Vaadin Dashboard - 3.1.0",
-  "uid": "6_bNYpGVy",
+  "title": "Vaadin Dashboard - 4.0.0",
+  "uid": "6_bNYpGV4",
   "version": 1,
   "weekStart": ""
 }
