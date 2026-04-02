@@ -276,7 +276,13 @@
           ],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Start time",
+            "desc": true
+          }
+        ]
       },
       "pluginVersion": "12.4.2",
       "targets": [
@@ -286,7 +292,9 @@
             "uid": "tempo"
           },
           "key": "Q-8b6ee9d1-12d1-410a-be7d-69e3313d3006-0",
-          "queryType": "traceqlSearch",
+          "queryType": "traceql",
+          "query": "{}",
+          "limit": 20,
           "refId": "A",
           "tableType": "traces"
         }
@@ -342,7 +350,13 @@
           ],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Start time",
+            "desc": true
+          }
+        ]
       },
       "pluginVersion": "12.4.2",
       "targets": [
@@ -352,19 +366,11 @@
             "uid": "tempo"
           },
           "key": "Q-9e90e9ef-840f-4b31-a02c-c459bf99bbc6-0",
-          "queryType": "traceqlSearch",
+          "queryType": "traceql",
+          "query": "{status = error}",
+          "limit": 20,
           "refId": "A",
-          "tableType": "traces",
-          "filters": [
-            {
-              "id": "status",
-              "tag": "status",
-              "operator": "=",
-              "value": ["error"],
-              "type": "static",
-              "scope": "span"
-            }
-          ]
+          "tableType": "traces"
         }
       ],
       "title": "Errors",
