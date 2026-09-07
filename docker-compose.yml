@@ -46,9 +46,10 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
-      - ./grafana/vaadin-dashboard.json:/var/lib/grafana/dashboards/vaadin-dashboard.json
-      - ./grafana/vaadin-dashboard-3.1.0.json:/var/lib/grafana/dashboards/vaadin-dashboard-3.1.0.json
-      - ./grafana/vaadin-dashboard-4.0.0.json:/var/lib/grafana/dashboards/vaadin-dashboard-4.0.0.json
+      # Only the Observability Kit 5 dashboard is provisioned. The 3.1.0/4.0.0 dashboards
+      # are still in the repo but not mounted: every meter was renamed in kit 5, so they
+      # can only render "No data". See README.md.
+      - ./grafana/vaadin-dashboard-5.0.0.json:/var/lib/grafana/dashboards/vaadin-dashboard-5.0.0.json
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
