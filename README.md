@@ -1,6 +1,6 @@
 # Vaadin Observability Grafana Setup
 
-This repo provides a docker compose setup for collecting traces, metrics and logs from a Vaadin application instrumented with the Vaadin Observability Agent into Grafana.  
+This repo provides a docker compose setup for collecting traces and metrics from a Vaadin application instrumented with Vaadin Observability Kit into Grafana.  
 
 > **Warning**
 > This setup is only intended as a local test setup. It is not production ready.
@@ -14,23 +14,77 @@ The setup runs the OpenTelemetry Collector which exposes the following endpoints
 - `http://localhost:4317` (OTLP GRPC)
 - `http://localhost:4318` (OTLP HTTP)
 
-To configure the agent to send data to this setup, create an `agent.properties` file with the following contents:
-```
-otel.service.name=vaadin
-otel.traces.exporter=otlp
-otel.metrics.exporter=otlp
-otel.logs.exporter=otlp
+### Sending data from Observability Kit 5
+
+Observability Kit 5 is a Micrometer library rather than a Java agent: there is no `-javaagent`
+flag and no `otel.*` properties. Add the kit plus Spring Boot's OpenTelemetry starter to your
+app:
+
+```xml
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>observability-kit-starter</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-opentelemetry</artifactId>
+</dependency>
 ```
 
-Then start your Vaadin app together with the agent, for example:
+and point its OTLP exporters at this setup's collector:
+
+```properties
+# The dashboard filters on service_name="vaadin"
+spring.application.name=vaadin
+management.otlp.metrics.export.url=http://localhost:4318/v1/metrics
+management.otlp.metrics.export.step=10s
+management.opentelemetry.tracing.export.otlp.endpoint=http://localhost:4318/v1/traces
+# Default is 0.1 - sample everything so a demo does not look broken
+management.tracing.sampling.probability=1.0
 ```
-java -javaagent:observability-kit-agent-4.0.0.jar \
-     -Dotel.javaagent.configuration-file=agent.properties \
-     -jar myapp.jar
+
+Then just run your app normally:
 ```
+java -jar myapp.jar
+```
+
+#### Push vs scrape
+
+The properties above **push** metrics over OTLP to the collector, which re-exposes them for
+Prometheus on port 8090 (see `prometheus/prometheus.yml`). The alternative is to let Prometheus
+**scrape** the app directly: add `io.micrometer:micrometer-registry-prometheus` to the app,
+expose the endpoint with `management.endpoints.web.exposure.include=prometheus`, and add a
+second target to `prometheus/prometheus.yml`:
+
+```yaml
+  - job_name: 'vaadin-app'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+```
+
+That target is deliberately **not** enabled here - the dashboard is built against the pushed
+metrics, whose labels carry `exported_job="vaadin"` from the collector.
+
+Observability Kit 5 no longer exports logs, so nothing reaches Loki out of the box. Loki is
+still part of this setup; wiring the OpenTelemetry Logback appender to it is left as an exercise.
 
 The Grafana UI is available at http://localhost:3000. Anonymous access with admin privileges is enabled by default, so no login is required.
-The setup also provides sample dashboards under the **Vaadin** folder, including a dashboard for Observability Kit 3.1.0.
+The setup provisions **Vaadin Dashboard - 5.0.0** (uid `vaadin-obskit-5`) under the **Vaadin**
+folder. The older `vaadin-dashboard.json`, `vaadin-dashboard-3.1.0.json` and
+`vaadin-dashboard-4.0.0.json` files are kept in the repo for reference but are no longer mounted:
+Observability Kit 5 renamed every meter (`vaadin.session.count` -> `vaadin.sessions.active`,
+`vaadin.ui.count` -> `vaadin.ui.active`, JVM metrics now come from Spring Boot Actuator as
+`jvm_memory_used_bytes` / `process_cpu_usage`), so those dashboards can only render "No data".
+
+Note that the 5.0.0 dashboard contains no `histogram_quantile()` panels. Micrometer timers
+publish count/sum/max only; the OTLP registry emits a single `+Inf` bucket unless percentile
+histograms are enabled per meter, so latency panels are built on
+`rate(_sum[1m]) / rate(_count[1m])` and the `_max` gauge instead.
 
 To stop all services in this setup, run:
 ```
@@ -53,7 +107,7 @@ The collector is configured to receive trace, metrics and log data in the `OTLP`
 It then distributes that data to individual services that are then used by Grafana to query data from:
 - Traces are sent to Grafana Tempo via OTLP HTTP
 - Metrics are exposed to be scraped by Prometheus
-- Logs are sent to Grafana Loki via its native OTLP endpoint
+- Logs are sent to Grafana Loki via its native OTLP endpoint (Observability Kit 5 does not export logs, so this pipeline is idle unless the app sends its own)
 
 ### Grafana Tempo
 
@@ -77,7 +131,7 @@ Exposes a query API that is used by Grafana to search for logs.
 
 ### Grafana
 
-Provides the UI to display the traces, metrics and logs. The Grafana setup automatically provisions data sources for collecting the respective data from Tempo, Prometheus and Loki. It also includes a basic dashboard for showing some metrics, traces and logs - this requires the OpenTelemetry service name to be configured as `vaadin`, which is the default when using the Vaadin Observability agent.
+Provides the UI to display the traces, metrics and logs. The Grafana setup automatically provisions data sources for collecting the respective data from Tempo, Prometheus and Loki. It also includes a basic dashboard for showing some metrics and traces - this requires the OpenTelemetry service name to be configured as `vaadin`, which is what `spring.application.name=vaadin` gives you with Observability Kit 5.
 
 ## Data Retention
 
